@@ -4,7 +4,8 @@ from tensorflow.keras import datasets, losses, models, layers
 from numpy import ndarray, append, concatenate, log2
 from random import shuffle
 from sys import stdout
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
+from heapq import nlargest
 
 # tf.config.list_physical_devices()
 # %% 
@@ -136,6 +137,24 @@ class activeLearner:
         
         return maxProb.argsort()
     
+    
+    # TODO: test method
+    def calculateMargin(self, verbose=None):    # provides an index list for labelData() (margin sampling)
+        if verbose is None:
+                verbose = self.verbose
+                
+        results = self.softmaxModel.predict(self.xTrainUnlabeled, verbose=verbose)
+        
+        margins = ndarray(shape=(0,0), dtype=float)
+        
+        for res in results:
+            twoLargest = nlargest(2,res)
+            margins = append(margins, twoLargest[0]-twoLargest[1])  # abs() not needed, because heapq.nlargest() already sorts its output
+        
+        return margins.argsort()
+    
+    
+    
     def evaluateModel(self, showIterationNumber=True, verbose=None):
         if verbose is None:
             verbose = self.verbose
@@ -216,8 +235,10 @@ class activeLearner:
                 labelingOrder = self.calculateEntropies(verbose=verbose)
             elif samplingMethod.lower() == "leastconfident":
                 labelingOrder = self.calculateLeastConfident(verbose=verbose)
+            elif samplingMethod.lower() == "margin":
+                labelingOrder = self.calculateMargin(verbose=verbose)
             else:
-                print("ERROR: unknown sampling method; available options: random, entropy, leastConfident")
+                print("ERROR: unknown sampling method; available options: random, entropy, leastConfident, margin")
                 return
             
             self.labelData(labelingOrder, numLabelsPerIteration)

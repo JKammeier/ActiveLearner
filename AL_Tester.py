@@ -65,8 +65,7 @@ def loopWrapper(method):
 # al1 = activeLearner(numInitDatapoints=-1)
 
 
-
-# %% pool based, random sampling, datapoints: 50 inital; 10 per iteration
+# %% pool based, random sampling
 if __name__ == '__main__':
     t1 = time()
     print("Starting random sampling...")
@@ -91,7 +90,7 @@ if __name__ == '__main__':
     print(f"Random sampling: Runtime = {randRuntime} s; Averaging = {randAveraging} s; total = {randRuntime + randAveraging} s")
 
 
-# %% pool based, least confident sampling, datapoints: 50 initial; 10 per iteration
+# %% pool based, least confident sampling
 if __name__ == '__main__':
     print("Starting least confident sampling...")
     showProgressBar(0)
@@ -112,10 +111,28 @@ if __name__ == '__main__':
     endT = time()
     lcRuntime = midT - startT
     lcAveraging = endT - midT
-    print(f"Least Confident sampling: Runtime = {lcRuntime} s; Averaging = {lcAveraging} s; total = {lcRuntime + lcAveraging} s")
+    print(f"Least confident sampling: Runtime = {lcRuntime} s; Averaging = {lcAveraging} s; total = {lcRuntime + lcAveraging} s")
 
 
-# %% pool based, entropy sampling, datapoints: 50 initial; 10 per iteration
+# %% pool based, margin sampling
+if __name__== '__main__':
+    print("Starting margin sampling...")
+    showProgressBar(0)
+    startT = time()
+    accuraciesMargin = []
+    for i in range(runs):
+        accuraciesMargin.append(testWrapper("margin"))
+        showProgressBar((i+1)/runs)
+    
+    midT = time()
+    avgMargin = averageAccuracies(accuraciesMargin)
+    endT = time()
+    margRuntime = midT - startT
+    margAveraging = endT - midT
+    print(f"Margin sampling: Runtime = {margRuntime} s; Averaging = {margAveraging} s; total = {margRuntime + margAveraging} s")
+    
+
+# %% pool based, entropy sampling
 if __name__ == '__main__':
     print("Starting entropy sampling...")
     showProgressBar(0)
@@ -147,10 +164,11 @@ if __name__ == '__main__':
     plt.xlabel("number of labeled datapoints")
     plt.ylabel("accuracy")
     plt.plot(numberLabels, avgEntropy, color="red", label="entropy")
-    plt.plot(numberLabels, avgLeastConfident, color="green", label="least confident")
-    plt.plot(numberLabels, avgRandom, color="blue", label="random")
+    plt.plot(numberLabels, avgMargin, color="purple", label="margin")
+    plt.plot(numberLabels, avgLeastConfident, color="blue", label="least confident")
+    plt.plot(numberLabels, avgRandom, color="green", label="random")
     plt.legend()
-    plt.savefig("entr-lc-rand_10run_100+5-500.png")
+    #plt.savefig("entr-marg-lc-rand_10run_100+5-500.png")
     #plt.savefig("ent-lc-rand_5perIt_20runAvg.png")
     #plt.savefig("C:/Users\JannisKammeier/OneDrive - Fachhochschule Bielefeld/Semester_5_Wi22/Studienarbeit/Python/test.png")
     #plt.plot(al2.numberLabels, al2.losses)
