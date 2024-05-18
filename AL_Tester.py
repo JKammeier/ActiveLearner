@@ -5,7 +5,7 @@ Created on Mon Apr 29 13:59:31 2024
 @author: JannisKammeier
 """
 import matplotlib.pyplot as plt
-from ActiveLearner import activeLearner
+from ActiveLearner import ActiveLearner
 from time import time
 from sys import stdout
 #import os
@@ -13,18 +13,18 @@ from sys import stdout
 #from joblib import Parallel, delayed
 #from multiprocessing import Pool
 
-runs = 10
-initialDatapoints = 100
-labels = 5
-iterations = 20 * 4
+runs:int = 10                   # the number of runs of the entire test (to average the results)
+initialDatapoints:int = 100     # the number of datapoints/images that the model will be trained with before starting active learning
+labels:int = 5                  # the number of datapoints that will be labeled in each iteration of the active learning cycle
+iterations:int = 20 * 4         # the number of iterations the active learning cycle will perform
 
 processes = 4
 
-numberLabels = range(initialDatapoints + (labels*iterations) + 1)[initialDatapoints:(initialDatapoints + (labels*iterations) + 1):labels]
+numberLabels:list[int] = range(initialDatapoints + (labels*iterations) + 1)[initialDatapoints:(initialDatapoints + (labels*iterations) + 1):labels]
 
 
 
-def averageAccuracies(accuracies):
+def averageAccuracies(accuracies:list[list[float]]) -> list[float]:
     allAverages = []
     for i in range(len(accuracies[0])):
         avg = 0
@@ -35,7 +35,7 @@ def averageAccuracies(accuracies):
     return allAverages
 
 
-def showProgressBar(progress, length = 50):
+def showProgressBar(progress:float, length:int = 50) -> None:
     filled = int(round(length * progress))
     bar = "=" * filled + ">" + "." * (length - filled - 1)
     
@@ -46,23 +46,24 @@ def showProgressBar(progress, length = 50):
         
     stdout.flush()
     
-def testWrapper(method):
-    al = activeLearner(numInitDatapoints=initialDatapoints, processes=processes)
+    
+def testWrapper(method:str) -> list[float]:
+    al:ActiveLearner = ActiveLearner(numInitDatapoints=initialDatapoints, processes=processes)
     al.activeLearningLoop(numIterations=iterations, samplingMethod=method, numLabelsPerIteration=labels)
     return al.accuracies
 
 
-def loopWrapper(method):
-    accuracies = []
-    for i in range(iterations):
-        accuracies.append(testWrapper(method))
-    return accuracies
+# def loopWrapper(method) -> list[list[float]]:
+#     accuracies = []
+#     for i in range(iterations):
+#         accuracies.append(testWrapper(method))
+#     return accuracies
 
 
 
 
 # %% no active learning, initial training on all 60000 datapoints
-# al1 = activeLearner(numInitDatapoints=-1)
+# al1 = ActiveLearner(numInitDatapoints=-1)
 
 
 # %% pool based, random sampling
@@ -77,7 +78,7 @@ if __name__ == '__main__':
     #     accuraciesRandom = pool.map(testWrapper, ["random" for i in range(runs)])
     for i in range(runs):
         accuraciesRandom.append(testWrapper("random"))
-        # al_random = activeLearner(numInitDatapoints=initialDatapoints)
+        # al_random = ActiveLearner(numInitDatapoints=initialDatapoints)
         # al_random.activeLearningLoop(numIterations=iterations, samplingMethod="random", numLabelsPerIteration=labels)
         # accuraciesRandom.append(al_random.accuracies)
         showProgressBar((i+1)/runs)
@@ -101,7 +102,7 @@ if __name__ == '__main__':
     #     accuraciesLeastConfident = pool.map(testWrapper, ["leastConfident" for i in range(runs)])
     for i in range(runs):
         accuraciesLeastConfident.append(testWrapper("leastConfident"))
-        # al_leastConfident = activeLearner(numInitDatapoints=initialDatapoints)
+        # al_leastConfident = ActiveLearner(numInitDatapoints=initialDatapoints)
         # al_leastConfident.activeLearningLoop(numIterations=iterations, samplingMethod="leastConfident", numLabelsPerIteration=labels)
         # accuraciesLeastConfident.append(al_leastConfident.accuracies)
         showProgressBar((i+1)/runs)
@@ -143,7 +144,7 @@ if __name__ == '__main__':
     #     accuraciesEntropy = pool.map(testWrapper, ["entropy" for i in range(runs)])
     for i in range(runs):
         accuraciesEntropy.append(testWrapper("entropy"))
-        # al_entropy = activeLearner(numInitDatapoints=initialDatapoints)
+        # al_entropy = ActiveLearner(numInitDatapoints=initialDatapoints)
         # al_entropy.activeLearningLoop(numIterations=iterations, samplingMethod="entropy", numLabelsPerIteration=labels)
         # accuraciesEntropy.append(al_entropy.accuracies)
         showProgressBar((i+1)/runs)
@@ -168,7 +169,7 @@ if __name__ == '__main__':
     plt.plot(numberLabels, avgLeastConfident, color="blue", label="least confident")
     plt.plot(numberLabels, avgRandom, color="green", label="random")
     plt.legend()
-    #plt.savefig("entr-marg-lc-rand_10run_100+5-500.png")
+    plt.savefig(f"{int(time())}_entr-marg-lc-rand_{runs}run_{initialDatapoints}+{labels}-{initialDatapoints + (labels*iterations)}.png")
     #plt.savefig("ent-lc-rand_5perIt_20runAvg.png")
     #plt.savefig("C:/Users\JannisKammeier/OneDrive - Fachhochschule Bielefeld/Semester_5_Wi22/Studienarbeit/Python/test.png")
     #plt.plot(al2.numberLabels, al2.losses)
