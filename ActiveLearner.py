@@ -1,7 +1,7 @@
 # %% imports
 from tensorflow.keras import datasets, losses, models, layers
 # import matplotlib.pyplot as plt
-from numpy import ndarray, append, concatenate, log2
+from numpy import ndarray, append, concatenate, log2, uint8
 from random import shuffle
 from sys import stdout
 # from joblib import Parallel, delayed
@@ -9,8 +9,8 @@ from heapq import nlargest
 
 # tf.config.list_physical_devices()
 # %% 
-class activeLearner:
-    def __init__(self, numInitDatapoints=100, verbose=0, processes=-1):
+class ActiveLearner:
+    def __init__(self, numInitDatapoints:int=100, verbose:int=0, processes:int=-1) -> None:
         (xTrain, yTrain), (self.xTest, self.yTest) = datasets.mnist.load_data()  # load mnist dataset
         
         # shuffle training data
@@ -22,24 +22,24 @@ class activeLearner:
         if numInitDatapoints <= 0:
                 numInitDatapoints = len(yTrain)
         
-        self.xTrainLabeled = xTrain[:numInitDatapoints]    # split training data into "labeled" and "unlabeled" for active learning
-        self.yTrainLabeled = yTrain[:numInitDatapoints]
-        self.xTrainUnlabeled = xTrain[numInitDatapoints:]
-        self.yTrainUnlabeled = yTrain[numInitDatapoints:]
+        self.xTrainLabeled:ndarray[ndarray[ndarray[uint8]]] = xTrain[:numInitDatapoints]    # split training data into "labeled" and "unlabeled" for active learning
+        self.yTrainLabeled:ndarray[ndarray[uint8]] = yTrain[:numInitDatapoints]
+        self.xTrainUnlabeled:ndarray[ndarray[ndarray[uint8]]] = xTrain[numInitDatapoints:]
+        self.yTrainUnlabeled:ndarray[ndarray[uint8]] = yTrain[numInitDatapoints:]
         
-        self.completedIterations = -1   # shows how many iterations the active learner has gone through (-1=model has not been trained, 0 = model has been trianed but no active learning iteration has been made)
-        self.numberLabels = []
-        self.losses = []
-        self.accuracies = []
-        self.verbose = verbose
-        self.processes = processes
+        self.completedIterations:int = -1   # shows how many iterations the active learner has gone through (-1=model has not been trained, 0 = model has been trianed but no active learning iteration has been made)
+        self.numberLabels:int = []
+        self.losses:float = []
+        self.accuracies:float = []
+        self.verbose:int = verbose
+        self.processes:int = processes
         
         self.buildModel()
         self.activeLearningLoop(0)
     
     
     
-    def buildModel(self):
+    def buildModel(self) -> None:
         self.trainingModel = models.Sequential([
             layers.Flatten(input_shape=(28, 28)),
             layers.Dense(100, activation="relu"),
@@ -63,7 +63,7 @@ class activeLearner:
 
 
 
-    def trainModel(self, data=None, labels=None, verbose=None):
+    def trainModel(self, data:ndarray[ndarray[ndarray[uint8]]]=None, labels:ndarray[ndarray[uint8]]=None, verbose:int=None) -> None:
         if data is None or labels is None:
             data = self.xTrainLabeled
             labels = self.yTrainLabeled
@@ -75,7 +75,7 @@ class activeLearner:
         
         
         
-    def createRandomOrder(self, length=None):    # provides an index list for labelData() (random order)
+    def createRandomOrder(self, length:int=None) -> list[int]:    # provides an index list for labelData() (random order)
         if length is None:
             length = len(self.yTrainUnlabeled)
     
@@ -85,7 +85,7 @@ class activeLearner:
     
     
     
-    def singleEntropy(self, array):
+    def singleEntropy(self, array:list[float]) -> float:
         sum = 0
         for value in array:
             if value:
@@ -94,7 +94,7 @@ class activeLearner:
 
         
         
-    def calculateEntropies(self, verbose=None):   # provides an index list for labelData() (entropy sampling)
+    def calculateEntropies(self, verbose:int=None) -> list[int]:   # provides an index list for labelData() (entropy sampling)
         if verbose is None:
             verbose = self.verbose
         
@@ -106,24 +106,25 @@ class activeLearner:
         # entropies = append(entropies, Parallel(n_jobs=self.processes)(delayed(self.singleEntropy)(res) for res in results)) # parrallel alternative to the for loop
         for res in results: # calculate entropy for every result
             #res = res/res.sum()    # normalize probabilities
-            sum = 0
-            for prob in res:
-                if prob:
-                    sum = sum - (prob * log2(prob))
-            entropies = append(entropies, sum)
+            entropies = append(entropies, self.singleEntropy(res))
+            # sum = 0
+            # for prob in res:
+            #     if prob:
+            #         sum = sum - (prob * log2(prob))
+            # entropies = append(entropies, sum)
             
-        entropyInds = entropies.argsort()
-        return entropyInds[::-1]
+        # entropyInds = entropies.argsort()
+        return entropies.argsort()[::-1]#entropyInds[::-1]
     
     
     
-    def max_Wrapper(self, i):
-        return max(self.results[i])
+    # def max_Wrapper(self, i):
+    #     return max(self.results[i])
     
     
     
     # TODO: test method
-    def calculateLeastConfident(self, verbose=None):    # provides an index list for labelData() (least confident sampling)
+    def calculateLeastConfident(self, verbose:int=None) -> list[int]:    # provides an index list for labelData() (least confident sampling)
         if verbose is None:
                 verbose = self.verbose
                 
@@ -139,7 +140,7 @@ class activeLearner:
     
     
     # TODO: test method
-    def calculateMargin(self, verbose=None):    # provides an index list for labelData() (margin sampling)
+    def calculateMargin(self, verbose:int=None) -> list[int]:    # provides an index list for labelData() (margin sampling)
         if verbose is None:
                 verbose = self.verbose
                 
@@ -155,7 +156,7 @@ class activeLearner:
     
     
     
-    def evaluateModel(self, showIterationNumber=True, verbose=None):
+    def evaluateModel(self, showIterationNumber:bool=True, verbose:int=None) -> None:
         if verbose is None:
             verbose = self.verbose
         
@@ -176,7 +177,7 @@ class activeLearner:
         self.accuracies.append(accuracy)
         
     
-    def labelData(self, sortedIndices, numDatapoints=50):   # adds new Datapoints from "unlabeled" training data to "labeled" training data
+    def labelData(self, sortedIndices:list[int], numDatapoints:int=50) -> None:   # adds new Datapoints from "unlabeled" training data to "labeled" training data
         if numDatapoints > len(self.yTrainUnlabeled):
             print("ERROR: not enough unlabeled data left")
             return
@@ -205,20 +206,20 @@ class activeLearner:
             
             
             
-    def showProgressBar(self, progress, length = 30):
-        filled = int(round(length * progress))
-        bar = "=" * filled + ">" + "." * (length - filled - 1)
+    # def showProgressBar(self, progress, length = 30) -> None:
+    #     filled = int(round(length * progress))
+    #     bar = "=" * filled + ">" + "." * (length - filled - 1)
         
-        if filled == length:
-            stdout.write("\r[" + "=" * filled + "] 100.00%\n")
-        else:
-            stdout.write("\r[%s] %.2f%%" % (bar, progress * 100))
+    #     if filled == length:
+    #         stdout.write("\r[" + "=" * filled + "] 100.00%\n")
+    #     else:
+    #         stdout.write("\r[%s] %.2f%%" % (bar, progress * 100))
             
-        stdout.flush()
+    #     stdout.flush()
             
             
             
-    def activeLearningLoop(self, numIterations=1, samplingMethod="random", numLabelsPerIteration=50, verbose=None):
+    def activeLearningLoop(self, numIterations:int=1, samplingMethod:str="random", numLabelsPerIteration:int=50, verbose:int=None) -> None:
         if verbose is None:
             verbose = self.verbose
         
