@@ -71,8 +71,9 @@ class ActiveLearner:
         if verbose is None:
             verbose = self.verbose
         
-        self.trainingModel.fit(self.xTrainLabeled, self.yTrainLabeled, batch_size=10, epochs=5, shuffle=True, verbose=verbose)
-        
+        # self.trainingModel.fit(self.xTrainLabeled, self.yTrainLabeled, batch_size=10, epochs=5, shuffle=True, verbose=verbose)
+        self.trainingModel.fit(self.xTrainLabeled, self.yTrainLabeled, epochs=10, shuffle=True, verbose=verbose)
+
         
         
     def createRandomOrder(self, length:int=None) -> list[int]:    # provides an index list for labelData() (random order)
