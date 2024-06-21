@@ -8,15 +8,16 @@ import matplotlib.pyplot as plt
 from ActiveLearner import ActiveLearner
 from time import time
 from sys import stdout
+import csv
 #import os
 #import tensorflow as tf
 #from joblib import Parallel, delayed
 #from multiprocessing import Pool
 
-runs:int = 10                   # the number of runs of the entire test (to average the results)
-initialDatapoints:int = 100     # the number of datapoints/images that the model will be trained with before starting active learning
-labels:int = 5                  # the number of datapoints that will be labeled in each iteration of the active learning cycle
-iterations:int = 20 * 4         # the number of iterations the active learning cycle will perform
+runs:int = 20                   # the number of runs of the entire test (to average the results)
+initialDatapoints:int = 3000     # the number of datapoints/images that the model will be trained with before starting active learning
+labels:int = 200                  # the number of datapoints that will be labeled in each iteration of the active learning cycle
+iterations:int = 30         # the number of iterations the active learning cycle will perform
 
 processes = 4
 
@@ -82,6 +83,7 @@ if __name__ == '__main__':
         # al_random.activeLearningLoop(numIterations=iterations, samplingMethod="random", numLabelsPerIteration=labels)
         # accuraciesRandom.append(al_random.accuracies)
         showProgressBar((i+1)/runs)
+        #print(f"\nAcc: {accuraciesRandom[-1]}")
         
     midT = time()
     avgRandom = averageAccuracies(accuraciesRandom)
@@ -89,6 +91,7 @@ if __name__ == '__main__':
     randRuntime = midT - startT
     randAveraging = endT - midT
     print(f"Random sampling: Runtime = {randRuntime} s; Averaging = {randAveraging} s; total = {randRuntime + randAveraging} s")
+    #print(f"Average Accuracy: {avgRandom}")
 
 
 # %% pool based, least confident sampling
@@ -159,8 +162,10 @@ if __name__ == '__main__':
     print(f"total time: {t2-t1} s")
 
 
-# %% plot
+# %% plot and save results
 if __name__ == '__main__':
+    timestamp = int(time())
+    
     plt.title("comparison of query strategies")
     plt.xlabel("number of labeled datapoints")
     plt.ylabel("accuracy")
@@ -169,7 +174,22 @@ if __name__ == '__main__':
     plt.plot(numberLabels, avgLeastConfident, color="blue", label="least confident")
     plt.plot(numberLabels, avgRandom, color="green", label="random")
     plt.legend()
-    plt.savefig(f"{int(time())}_entr-marg-lc-rand_{runs}run_{initialDatapoints}+{labels}-{initialDatapoints + (labels*iterations)}.png")
+    plt.savefig(f"results/{timestamp}_entr-marg-lc-rand_{runs}run_{initialDatapoints}+{labels}-{initialDatapoints + (labels*iterations)}.png")
+    
+    with open("results/{timestamp}_entr-marg-lc-rand_{runs}run_{initialDatapoints}+{labels}-{initialDatapoints + (labels*iterations)}.csv", "w", newline="") as file:
+        csv_writer = csv.writer(file)
+        csv_writer.writerow(["Number of Labels:"] + numberLabels)
+        csv_writer.writerow([])
+        csv_writer.writerow(["Entropy"] + avgEntropy)
+        csv_writer.writerow([])
+        csv_writer.writerow(["Margin"] + avgMargin)
+        csv_writer.writerow([])
+        csv_writer.writerow(["Least Confident"] + avgLeastConfident)
+        csv_writer.writerow([])
+        csv_writer.writerow(["Random"] + avgRandom)
+        csv_writer.writerow([])
+        
+        
     #plt.savefig("ent-lc-rand_5perIt_20runAvg.png")
     #plt.savefig("C:/Users\JannisKammeier/OneDrive - Fachhochschule Bielefeld/Semester_5_Wi22/Studienarbeit/Python/test.png")
     #plt.plot(al2.numberLabels, al2.losses)
