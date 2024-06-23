@@ -9,6 +9,7 @@ from ActiveLearner import ActiveLearner
 from time import time
 from sys import stdout
 import csv
+from copy import deepcopy
 #import os
 #import tensorflow as tf
 #from joblib import Parallel, delayed
@@ -21,7 +22,7 @@ iterations:int = 30         # the number of iterations the active learning cycle
 
 processes = 4
 
-numberLabels:list[int] = range(initialDatapoints + (labels*iterations) + 1)[initialDatapoints:(initialDatapoints + (labels*iterations) + 1):labels]
+numberLabels:list[int] = list(range(initialDatapoints + (labels*iterations) + 1)[initialDatapoints:(initialDatapoints + (labels*iterations) + 1):labels])
 
 
 
@@ -51,7 +52,9 @@ def showProgressBar(progress:float, length:int = 50) -> None:
 def testWrapper(method:str) -> list[float]:
     al:ActiveLearner = ActiveLearner(numInitDatapoints=initialDatapoints, processes=processes)
     al.activeLearningLoop(numIterations=iterations, samplingMethod=method, numLabelsPerIteration=labels)
-    return al.accuracies
+    accuracies:list[float] = deepcopy(al.accuracies)
+    del al
+    return accuracies
 
 
 # def loopWrapper(method) -> list[list[float]]:
@@ -176,7 +179,7 @@ if __name__ == '__main__':
     plt.legend()
     plt.savefig(f"results/{timestamp}_entr-marg-lc-rand_{runs}run_{initialDatapoints}+{labels}-{initialDatapoints + (labels*iterations)}.png")
     
-    with open("results/{timestamp}_entr-marg-lc-rand_{runs}run_{initialDatapoints}+{labels}-{initialDatapoints + (labels*iterations)}.csv", "w", newline="") as file:
+    with open(f"results/{timestamp}_entr-marg-lc-rand_{runs}run_{initialDatapoints}+{labels}-{initialDatapoints + (labels*iterations)}.csv", "w", newline="") as file:
         csv_writer = csv.writer(file)
         csv_writer.writerow(["Number of Labels:"] + numberLabels)
         csv_writer.writerow([])
