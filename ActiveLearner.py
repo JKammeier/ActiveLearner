@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr 29 13:59:31 2024
+
+@author: JannisKammeier
+"""
+
 # %% imports
 from tensorflow.keras import datasets, losses, models, layers
 # import matplotlib.pyplot as plt
