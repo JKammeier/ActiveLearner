@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from ActiveLearner import ActiveLearner
 from time import time
 from sys import stdout
-import csv
+from csv import writer
 from copy import deepcopy
 #import os
 #import tensorflow as tf
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     plt.savefig(f"results/{timestamp}_entr-marg-lc-rand_{runs}run_{initialDatapoints}+{labels}-{initialDatapoints + (labels*iterations)}.png")
     
     with open(f"results/{timestamp}_entr-marg-lc-rand_{runs}run_{initialDatapoints}+{labels}-{initialDatapoints + (labels*iterations)}.csv", "w", newline="") as file:
-        csv_writer = csv.writer(file)
+        csv_writer = writer(file)
         csv_writer.writerow(["Number of Labels:"] + numberLabels)
         csv_writer.writerow([])
         csv_writer.writerow(["Entropy"] + avgEntropy)
