@@ -11,12 +11,13 @@ from sys import stdout
 from csv import writer
 from copy import deepcopy
 
-runs:int = 20                   # the number of runs of the entire test (to average the results)
-initialDatapoints:int = 3000     # the number of datapoints/images that the model will be trained with before starting active learning
 t1 = time()
 
+# these variables should be used to set the hyperparameters of the test
+runs:int = 10                   # the number of runs of the entire test (to average the results)
+initialDatapoints:int = 1000     # the number of datapoints/images that the model will be trained with before starting active learning
+iterations:int = 5*4         # the number of iterations the active learning cycle will perform
 labels:int = 200                  # the number of datapoints that will be labeled in each iteration of the active learning cycle
-iterations:int = 30         # the number of iterations the active learning cycle will perform
 
 # these variables can be used to turn of parts of the testing script
 randomSampling = True
