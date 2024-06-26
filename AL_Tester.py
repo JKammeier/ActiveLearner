@@ -20,11 +20,11 @@ iterations:int = 5*4         # the number of iterations the active learning cycl
 labels:int = 200                  # the number of datapoints that will be labeled in each iteration of the active learning cycle
 
 # these variables can be used to turn of parts of the testing script
-randomSampling = True
-leastConfidentSampling = True
-marginSampling = True
-entropySampling = True
-plotAndSaveResults = True
+randomSampling:bool = True
+leastConfidentSampling:bool = True
+marginSampling:bool = True
+entropySampling:bool = True
+plotAndSaveResults:bool = True
 
 
 numberLabels:list[int] = list(range(initialDatapoints + (labels*iterations) + 1)[initialDatapoints:(initialDatapoints + (labels*iterations) + 1):labels])

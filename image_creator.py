@@ -11,11 +11,11 @@ from time import time
 al:ActiveLearner = ActiveLearner(numInitDatapoints=500)
 
 # choose one of the three sampling strategies
-labelingOrder = al.calculateMargin()
-# labelingOrder = al.calculateEntropies()
-# labelingOrder = al.calculateLeastConfident()
+labelingOrder:list[int] = al.calculateMargin()
+# labelingOrder:list[int] = al.calculateEntropies()
+# labelingOrder:list[int] = al.calculateLeastConfident()
 
-sortImg = al.xTrainUnlabeled[labelingOrder]
+sortImg:list[list[list[int]]] = al.xTrainUnlabeled[labelingOrder]
 
 
 # plot the three most informative images
@@ -28,7 +28,7 @@ for i in range (3):
 plt.suptitle("most informative images", fontsize=150)
 
 
-plt.savefig(f"mostInfo_{time()}.png")
+plt.savefig(f"results/mostInfo_{time()}.png")
 plt.show()
 
 
@@ -42,7 +42,7 @@ for i in range(3):
 plt.suptitle("least informative images", fontsize=150)
 
 
-plt.savefig(f"leastInfo_{time()}.png")
+plt.savefig(f"results/leastInfo_{time()}.png")
 plt.show()
 
 
