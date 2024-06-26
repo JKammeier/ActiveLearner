@@ -7,17 +7,14 @@ Created on Mon Apr 29 13:59:31 2024
 
 # %% imports
 from tensorflow.keras import datasets, losses, models, layers
-# import matplotlib.pyplot as plt
 from numpy import ndarray, append, concatenate, log2, uint8
 from random import shuffle
-from sys import stdout
-# from joblib import Parallel, delayed
 from heapq import nlargest
 
 # tf.config.list_physical_devices()
-# %% 
+
 class ActiveLearner:
-    def __init__(self, numInitDatapoints:int=100, verbose:int=0, processes:int=-1) -> None:
+    def __init__(self, numInitDatapoints:int=100, verbose:int=0) -> None:
         (xTrain, yTrain), (self.xTest, self.yTest) = datasets.mnist.load_data()  # load mnist dataset
         
         # shuffle training data
@@ -39,7 +36,6 @@ class ActiveLearner:
         self.losses:float = []
         self.accuracies:float = []
         self.verbose:int = verbose
-        self.processes:int = processes
         
         self.buildModel()
         self.activeLearningLoop(0)
@@ -65,8 +61,6 @@ class ActiveLearner:
             self.trainingModel,
             layers.Softmax()
             ])
-    
-        # print(trainingModel.summary())
 
 
 
@@ -78,7 +72,6 @@ class ActiveLearner:
         if verbose is None:
             verbose = self.verbose
         
-        # self.trainingModel.fit(self.xTrainLabeled, self.yTrainLabeled, batch_size=10, epochs=5, shuffle=True, verbose=verbose)
         self.trainingModel.fit(self.xTrainLabeled, self.yTrainLabeled, epochs=10, shuffle=True, verbose=verbose)
 
         
@@ -106,48 +99,31 @@ class ActiveLearner:
         if verbose is None:
             verbose = self.verbose
         
-        results = self.softmaxModel.predict(self.xTrainUnlabeled, verbose=verbose)  # TODO: (maybe) improve runtime
+        results = self.softmaxModel.predict(self.xTrainUnlabeled, verbose=verbose)
         
-        # TODO: (maybe) improve runtime
         entropies = ndarray(shape=(0,0), dtype=float)
-        # Parallel(n_jobs=self.processes, prefer="threads")
-        # entropies = append(entropies, Parallel(n_jobs=self.processes)(delayed(self.singleEntropy)(res) for res in results)) # parrallel alternative to the for loop
         for res in results: # calculate entropy for every result
             #res = res/res.sum()    # normalize probabilities
             entropies = append(entropies, self.singleEntropy(res))
-            # sum = 0
-            # for prob in res:
-            #     if prob:
-            #         sum = sum - (prob * log2(prob))
-            # entropies = append(entropies, sum)
             
-        # entropyInds = entropies.argsort()
-        return entropies.argsort()[::-1]#entropyInds[::-1]
+        return entropies.argsort()[::-1]
     
     
     
-    # def max_Wrapper(self, i):
-    #     return max(self.results[i])
-    
-    
-    
-    # TODO: test method
     def calculateLeastConfident(self, verbose:int=None) -> list[int]:    # provides an index list for labelData() (least confident sampling)
         if verbose is None:
                 verbose = self.verbose
                 
-        results = self.softmaxModel.predict(self.xTrainUnlabeled, verbose=verbose)  # TODO: (maybe) improve runtime
+        results = self.softmaxModel.predict(self.xTrainUnlabeled, verbose=verbose)
         
         maxProb = ndarray(shape=(0,0), dtype=float)
-        # maxProb = append(maxProb, Parallel(n_jobs=self.processes)(delayed(self.max_Wrapper)(i) for i in range(len(self.results)))) # parrallel alternative to the for loop (0.95x speed)
-        # maxProb = append(maxProb, Parallel(n_jobs=self.processes, prefer="threads")(delayed(max)(res) for res in results)) # parrallel alternative to the for loop (0.85x speed)
         for res in results:
             maxProb = append(maxProb, max(res))
         
         return maxProb.argsort()
     
     
-    # TODO: test method
+    
     def calculateMargin(self, verbose:int=None) -> list[int]:    # provides an index list for labelData() (margin sampling)
         if verbose is None:
                 verbose = self.verbose
@@ -185,11 +161,13 @@ class ActiveLearner:
         self.accuracies.append(accuracy)
         
     
+    
     def labelData(self, sortedIndices:list[int], numDatapoints:int=50) -> None:   # adds new Datapoints from "unlabeled" training data to "labeled" training data
         if numDatapoints > len(self.yTrainUnlabeled):
             print("ERROR: not enough unlabeled data left")
             return
         
+        # sort "unlabeled" data by informativeness
         xTrainUnlabeledSorted = self.xTrainUnlabeled[sortedIndices]
         yTrainUnlabeledSorted = self.yTrainUnlabeled[sortedIndices]
 
@@ -198,35 +176,9 @@ class ActiveLearner:
         self.yTrainLabeled = concatenate((self.yTrainLabeled, yTrainUnlabeledSorted[:numDatapoints]), axis=0)
         self.xTrainUnlabeled = xTrainUnlabeledSorted[numDatapoints:]
         self.yTrainUnlabeled = yTrainUnlabeledSorted[numDatapoints:]
-
-
-
-    # def show20img(self, images=None):   # show first 20 images from a given dataset (default: current training data)
-    #     if images is None:
-    #         images = self.xTrainLabeled
-            
-    #     plt.figure(figsize=(28, 28))
-    #     for i in range(20):
-    #         # the number of images in the grid is 4x5 (20)
-    #         plt.subplot(4, 5, i+1)
-    #         plt.imshow(255-images[i], cmap="gray")
-    #         plt.axis("off")
             
             
-            
-    # def showProgressBar(self, progress, length = 30) -> None:
-    #     filled = int(round(length * progress))
-    #     bar = "=" * filled + ">" + "." * (length - filled - 1)
         
-    #     if filled == length:
-    #         stdout.write("\r[" + "=" * filled + "] 100.00%\n")
-    #     else:
-    #         stdout.write("\r[%s] %.2f%%" % (bar, progress * 100))
-            
-    #     stdout.flush()
-            
-            
-            
     def activeLearningLoop(self, numIterations:int=1, samplingMethod:str="random", numLabelsPerIteration:int=50, verbose:int=None) -> None:
         if verbose is None:
             verbose = self.verbose
@@ -254,8 +206,4 @@ class ActiveLearner:
             self.trainModel(self.xTrainLabeled, self.yTrainLabeled, verbose=verbose)
             self.completedIterations = self.completedIterations + 1
             self.evaluateModel(verbose=verbose)
-            
-            # self.showProgressBar((iterationIndex+1)/numIterations)
-            
-        # print("Active Learning Loop DONE")
 
