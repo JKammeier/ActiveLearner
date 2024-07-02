@@ -7,5 +7,5 @@
 
 [image_creator.py](./image_creator.py) is a tool to create images of the three most and least informative instances of the dataset.
 
-[tf_env.yaml](./tf_env.yaml) contains an Anaconda environment with all necessary dependancies for a windows machine. The necessary Python packages are: Tensorflow 2.10, matplotlib, joblib
+[tf_env.yaml](./tf_env.yaml) contains an Anaconda environment with all necessary dependancies for a windows machine. The necessary Python packages are: Tensorflow 2.10, matplotlib
 
