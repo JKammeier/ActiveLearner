@@ -6,6 +6,7 @@ Created on Mon Apr 29 13:59:31 2024
 """
 import matplotlib.pyplot as plt
 from ActiveLearner import ActiveLearner
+#from ActiveLearner_alternativeTraining import ActiveLearner
 from time import time
 from sys import stdout
 from csv import writer
